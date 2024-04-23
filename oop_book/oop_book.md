@@ -1224,3 +1224,339 @@ bear = Bear.new("black")
 If you forget to use the parentheses here, Ruby will raise an `ArgumentError` exception since the number of arguments is incorrect.
 
 <h3>Mixing in Modules</h3>
+
+Another way to DRY up your code in Ruby is to use <b>modules</b>. We've already seen a little bit of how to use modules, but we'll give a few more examples here. 
+
+Extracting common methods to a superclass, like we did in the previous section, is a great way to model concepts that are naturally hierarchical. We gave the example of animals. We have a generic superclass called `Animal` that can keep all basic behavior of all animals. We can then expand on the model a little and have, perhaps, a `Mammal` subclass of `Animal`. We can imagine the entire class hierarchy to look something like the figure below.
+
+![Possible Class Hierarchy](https://d2aw5xe2jldque.cloudfront.net/books/ruby/images/animal_hierarchy.jpg)
+
+The above diagram shows what pure class based inheritance looks like. Remember the goal of this is to put the right behavior (i.e., methods) in the right class so we don't need to repeat code in multiple classes. We can imagine that all `Fish` objects are related to animals that live in the water, so perhaps a `swim` method should be in the `Fish` class. We can also imagine that all `Mammal` objects will have warm blood, so we can create a method called `warm_blooded?` in the `Mammal` class and have it return `true`. Therefore, the `Cat` and `Dog` objects will have access to the `warm_blooded?` method which is automatically inherited from `Mammal` by the `Cat` and `Dog` classes, but they won't have access to the methods in the `Fish` class.
+
+This type of hierarchical modeling works, to some extent, but there are always exceptions. For example, we put the `swim` method in the `Fish` class, but some mammals can swim as well. We don't want to move the `swim` method into `Animal` because not all animals swim, and we don't want to create another `swim` method in `Dog` because that violates the DRY principle. For concerns such as these, we'd like to group them into a module and then <I>mix in</I> that module to the classes that require those behaviors. Here's an example:
+
+```ruby
+module Swimmable
+  def swim
+    "I'm swimming!"
+  end
+end
+
+class Animal; end
+
+class Fish < Animal
+  include Swimmable	# mixing in Swimmable module
+end
+
+class Mammal < Animal
+end
+
+class Mammal < Animal
+end
+
+class Cat < Mammal
+end
+
+class Dog < Mammal
+  include Swimmable	# mixing in Swimmable module
+end
+```
+
+And now `Fish` and `Dog` objects can swim, but objects of other classes won't be able to:
+
+```ruby
+sparky = Dog.new
+neemo  = Fish.new
+paws   = Cat.new
+
+sparky.swim         # => I'm swimming!
+neemo.swim          # => I'm swimming!
+paws.swim           # => NoMethodError: undefined method `swim' for #<Cat:0x007fc453152308>
+```
+
+Using modules to group common behaviors allows us to built a more powerful, flexible and DRY design.
+
+*Note: A common naming convention for Ruby is to use the "able" suffix on whatever verb describes the behavior that the module is modeling. You can see this convention with our `Swimmable` module. Likewise, we could name a module that describes "walking" as `Walkable`. Not all modules are named in this manner, however, it is quite common.*
+
+<h3>Inheritance vs Modules</h3>
+
+Now you know the two primary ways that Ruby implements inheritance. Class inheritance is the traditional way to think about inheritance: one type inherits the behaviors of another type. The result is a new type that specializes the type of superclass. The other form is sometimes called <b>interface inheritance</b>: this is where mixin modules come into play. The class doesn't inherit from another type, but instead inherits the interface provided by the mixin module. In this case, the result type is not a specialized type with respect to the module.
+
+You may wonder when to use class inheritance vs mixins. Here are a couple of things to consider when evaluating these choices:
+
+* You can only subclass (class inheritance) from one class. You can mix in as many modules (interface inheritance) as you'd like.
+* If there's an "is-a" relationship, class inheritance is usually the correct choice. If there's a "has-a" relationship, interface inheritance is generally a better choice. For example, a dog "is an" animal and it "has an" ability to swim.
+* You cannot instantiate modules. In other words, objects cannot be created from modules.
+
+As you get better at OO design, you'll start ti develop a feel for when to use class inheritance versus mixing in modules.
+
+<h3>Method Lookup Path</h3>
+
+Now that you have a grasp on both inheritance and mixins, let's put them both together to see how that affects the *method lookup path*. Recall the method lookup path is the order in which classes are inspected when you call a method. Let's take a look at the example code below.
+
+```ruby
+module Walkable
+  def walk
+    "I'm walking."
+  end
+end
+
+module Swimmable
+  def swim
+    "I'm swimming."
+  end
+end
+
+module Climbable
+  def climb
+    "I'm climbing."
+  end
+end
+
+class Animal
+  include Walkable
+  
+  def speak
+    "I'm an animal, and I speak!"
+  end
+end
+```
+
+We have three modules and one class. We've mixed in one module into the `Animal` class. The method lookup path is the path Ruby takes to look for a method. We can see this path with the `ancestors` class method:
+
+```ruby
+puts "---Animal method lookup---"
+puts Animal.ancestors
+```
+
+The output looks like this:
+
+```
+---Animal method lookup---
+Animal
+Walkable
+Object
+Kernel
+BasicObject
+```
+
+This means that when we call a method of any `Animal` object, first Ruby looks in the `Animal` class, then the `Walkable` module, then the `Object` class, then the `Kernel` module, and finally the `BasicObject` class.
+
+```ruby
+fido = Animal.new
+fido.speak		# => I'm an animal, and I speak!
+```
+
+Ruby found the `speak` method in the `Animal` class and looked no further.
+
+```ruby
+fido.walk			# => I'm walking
+```
+
+Ruby first looked for the `walk` instance method in `Animal`, and not finding it there, kept looking in the next place according to our list, which is the `Walkable` module. It saw a `walk` method there, executed it, and stopped looking further.
+
+```ruby
+fido.swim			# => NoMethodError: undefined method `swim' for #<Animal:0x007f92832625b0>
+```
+
+Ruby traversed all the classes and modules in the list, and didn't find a `swim` method, so it threw an error.
+
+Let's add another class to the code above. This class will inherit from the `Animal` class and mix in the `Swimmable` and `Climbable` modules.
+
+```ruby
+class GoodDog < Animal
+  include Swimmable
+  include Climbable
+end
+
+puts "---GoodDog method lookup---"
+puts GoodDog.ancestors
+```
+
+And this is the output we get:
+
+```
+---GoodDog method lookup---
+GoodDog
+Climbable
+Swimmable
+Animal
+Walkable
+Object
+Kernel
+BasicObject
+```
+
+There are several interesting things about the above output. First, this tells us that the order in which we include modules in important. Ruby actually looks at the last module we included *first*. This means that in the rare occurrence that the modules we mix in contain a method with the same name, the last module included will be consulted first. The second interesting thing is that the module included in the superclass made it on to the method lookup path. That means that all `GoodDog` objects will have access to not only `Animal` methods, but also methods defined in the `Walkable` module, as well as all other modules mixed in to any of its superclasses.
+
+Sometimes when you're working on a large project, it can be confusing where all these methods are coming from. By understanding the method lookup path, we can have a better idea of where and how all available methods are organized.
+
+<h3>More Modules</h3>
+
+We've already seen how modules can be used to mix-in common behavior into classes. Now we'll see two more uses for modules.
+
+The first use case we'll discuss is using modules for **namespacing**. In this context, namespacing means organizing similar classes under a module. In other words, we'll use modules to group related classes. Therein lies the first advantage of using modules for namespacing. It becomes easy for us to recognize related classes in our code. The second advantage is it reduces the likelihood of our classes colliding with other similarly named classes in our codebase. Here's how we do it:
+
+```ruby
+module Mammal
+  class Dog
+    def speak(sound)
+      p "#{sound}"
+    end
+  end
+  
+  class Cat
+    def say_name(name)
+      p "#{name}"
+    end
+  end
+end
+```
+
+We call classes in a module by appending the class name to the module name with two colons(`::`)
+
+```ruby
+buddy = Mammal::Dog.new
+kitty = Mammal::Cat.new
+buddy.speak('Arf!')			# => "Arf!"
+kitty.say_name('kitty')	# => "kitty"
+```
+
+The second use case for modules we'll look at is using modules as a **container** for methods, called module methods. This involves using modules to house other methods. This is very useful for methods that seem out of place within your code. Let's use our `Mammal` module to demonstrate:
+
+```ruby
+module Mammal
+  # ... rest of code omitted for brevity
+  
+  def self.some_out_of_place_method(num)
+    num ** 2
+  end
+end
+```
+
+Defining methods this way within a module means we can call them directly from the module:
+
+```ruby
+value = Mammal.some_out_of_place_method(4)
+```
+
+We can also call such methods by doing:
+
+```ruby
+value = Mammal::some_out_of_place_method(4)
+```
+
+Although the former is the preferred way.
+
+<h3>Private, Protected, and Public</h3>
+
+The last thing we want to cover is something that's actually quite simple, but necessary; Method Access Control. Access Control is a concept that exists in a number of programming languages, including Ruby. It is generally implemented through the use of *access modifiers*. The purpose of access modifiers is to allow or restrict access to a particular thing. In Ruby, the things that we are concerned with restricting access to are the methods defined in a class. In a Ruby context, therefore, you'll commonly see this concept refereed to as **Method Access Control**.
+
+The way that Method Access Control is implemented in Ruby is through the use of the `public`, `private`, and `protected` access modifiers. Right now, all the methods in our `GoodDog` class are public methods. A **public method** is a method that is available to anyone who knows either the class name or the object's name. These methods are readily available for the rest of the program to use and comprise the class's *interface* (that's how other classes and objects will interact with this class and its objects).
+
+Sometimes you'll have methods that are doing work in the class but don't need to be available to the rest of the program. These methods can be defined as **private**. How do we define private methods? We use the `private` method call in our program and anything below it is private (unless another method, like `protected`, is called after it to negate it).
+
+In our `GoodDog` class we have one operation that takes place that we could move into a private method. When we initialize an object, we calculate the dog's age in Dog years. Let's refactor this logic into a method and make it private so nothing outside of the class can use it.
+
+```ruby
+class GoodDog
+  DOG_YEARS = 7
+  
+  attr_accessor :name, :age
+  
+  def initialize(n, a)
+    self.name = n
+    self.age = a
+  end
+  
+  private
+  
+  def human_years
+    age * DOG_YEARS
+  end
+end
+
+sparky = GoodDog.new("Sparky", 4)
+sparky.human_years
+```
+
+We get the error message:
+
+```ruby
+NoMethodError: private method `human_years' called for
+  #<GoodDog:0x007f8f431441f8 @name="Sparky", @age=4>
+```
+
+We have made the `human_years` method private by placing it under the `private` method. What is it good for, then, if we can't call it? `private` methods are only accessible from other methods in the class. For example, given the above code, the following would be allowed:
+
+```ruby
+# assume the method definition below is above the "private" method
+
+def public_disclosure
+  "#{self.name} in human years is #{human_years}"
+end
+```
+
+Note that in this case, we can *not* use `self.human_years`, because the `human_years` method is private. Remember that `self.human_years` is equivalent to `sparky.human_years`, which is not allowed for private methods. Therefore, we have to just use `human_years`. In summary, private methods are not accessible outside of the class definition at all, and are only accessible from inside the class when called without `self`. 
+
+*As of Ruby 2.7, it is now legal to call private methods with a literal `self` as the caller. Note that this does **not** mean that we can call a private method with any other object, not even one of the same type. We can only call a private method with the current object.*
+
+Public and private methods are most common, but in some less common situations, we'll want an in-between approach. For this, we can use the `protected` method to create **protected** methods. Protected methods are similar to private methods in that they cannot be invoked outside the class. The main difference between them is that protected methods allow access between class instances, while private methods do not.
+
+Let's take a look at an example:
+
+```ruby
+class Person
+  def initialize(age)
+    @age = age
+  end
+  
+  def older?(other_person)
+    age > other_person.age
+  end
+  
+  protected
+  
+  attr_reader :age
+end
+
+malory = Person.new(64)
+sterling = Person.new(42)
+
+malory.older?(sterling)	# => true
+sterling.older?(malory)	# => false
+
+malory.age	# => NoMethodError: protected method `age' called for #<Person: @age=64>
+```
+
+The above code shows us that like private methods, protected methods cannot be invoked from outside of the class. However, unlike private methods, other instances of the class (or subclass) can also invoke the method. This allows for controlled access, but wider access between objects of the same class type.
+
+<h3>Accidental Method Overriding</h3>
+
+It's important to remember that every class you create inherently subclasses from <u>class Object</u>. The `Object` class is built into Ruby and comes with many critical methods.
+
+```ruby
+class Parent
+  def say_hi
+    p "Hi from Parent."
+  end
+end
+
+Parent.superclass		# => Object
+```
+
+This means that methods defined in the `Object` class are available in *all classes*.
+
+Further, recall that through the magic of inheritance, a subclass can override a superclass's method.
+
+```ruby
+class Child < Parent
+  def say_hi
+    p "Hi from Child."
+  end
+end
+
+child = Child.new
+child.say_hi		# => "Hi from Child."
+```
+
