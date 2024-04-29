@@ -1533,7 +1533,7 @@ The above code shows us that like private methods, protected methods cannot be i
 
 <h3>Accidental Method Overriding</h3>
 
-It's important to remember that every class you create inherently subclasses from <u>class Object</u>. The `Object` class is built into Ruby and comes with many critical methods.
+It's important to remember that every class you create inherently subclasses from <span style="color:red;">class Object</span>. The `Object` class is built into Ruby and comes with many critical methods.
 
 ```ruby
 class Parent
@@ -1559,4 +1559,124 @@ end
 child = Child.new
 child.say_hi		# => "Hi from Child."
 ```
+
+This means that, if you accidentally override a method that was originally defined in the `Object` class, it can have far-reaching effects on your code. For example, `send` is an instance method that all classes inherit from `Object`. If you defined a new `send` instance method in your class, all objects of your class will call your custom `send` method, instead of the one in class `Object`, which is probably the one they mean to call. Object `send` serves as a way to call a method by passing it a symbol or a string which represents the method you want to call. The next couple of arugments will represent the method's arguments, if any. Let's see how <span style="color:red;">send</span> normally words by making use of our `Child` class:
+
+```ruby
+son = Child.new
+son.send :say_hi		# => "Hi from Child."
+```
+
+Let's see what happens when we define a `send` method in our `Child` class and then try to invoke `Object`'s `send` method:
+
+```ruby
+class Child
+  def say_hi
+    p "Hi from Child."
+  end
+  
+  def send
+    p "send from Child..."
+  end
+end
+
+lad = Child.new
+lad.send :say_hi
+```
+
+Normally we would expect the output of this call to be `"Hi from Child"` but upon running the code we get a completely different result:
+
+```ruby
+ArgumentError: wrong number of arguments (1 for 0)
+from (pry):12:in `send'
+```
+
+In our example, we're passing `send` one argument even though our overridden `send` method does not take any arguments. Let's take a look at another example by exploring Object's `instance_of?` method. What this handy method does is to return `true` if an object is an instance of a given class and `false` otherwise. Let's see it in action:
+
+```ruby
+class Child
+  # other methods omitted
+  
+  def instance_of?
+    p "I am a fake instance"
+  end
+end
+
+heir = Child.new
+heri.instance_of? Child
+```
+
+Again, we'll see something completely different though our intention was to use Object's `instance_of?` method:
+
+```ruby
+ArgumentError: wrong number of arguments (1 for 0)
+from (pry):22:in `instance_of?'
+```
+
+That said, one `Object` instance method that's easily overridden without any major side-effect is the to_s method. You'll normally want to do this when you want a different string representation of an object. Overall, it's important to familiarize yourself with some of the common `Object` methods and make sure to not accidentally override them as this can have devastating consequences for your application.
+
+<h3>Summary</h3>
+
+We've covered quite a bit of ground now. You should be feeling pretty comfortable with the general syntax and structure of the Ruby language. You've got one more set of exercises to help put this information to good use, then you'll be ready to take the next step in your journey as a Ruby developer.
+
+All this complex knowledge about OOP is meant to help us build better designed applications. While there are definitely <i>wrong</i> ways to design an application, there is often no right choice when it comes to object oriented design, only different tradeoffs. As you gain more experience in object oriented design, you'll start to develop a taste for how to organize and shape your classes. For no, all this may feel a little daunting, but once you learn how to think in an OO way, it's hard to <i>not</i> think in that manner.
+
+Finally, make sure to take time to go through the exercises, OOP is a tough concept if this is your first time encountering it. Even if you've programmed in another OO language before, Ruby's implementation may be a little different. It's not enough to read and understand; you must learn by doing. Let's get on to the exercises!
+
+<h3>Exercises</h3>
+
+1. Create a superclass called `Vehicle` for your `MyCar` class to inherit from and move the behavior that isn't specific to the `MyCar` class to the superclass. Create a constant in your `MyCar` class that stores information about the vehicle that makes it different from other types of Vehicles.
+
+   Then create a new class called `MyTruck` that inherits from your superclass that also has a constant defined that separates it from the `MyCar` class in some way.
+
+   <b>Solution:</b>
+
+2. Add a class variable to your superclass that can keep track of the number of objects created that inherit from the superclass. Create a method to print our the value of this class variable as well.
+
+   <b>Solution:</b>
+
+3. Create a module that you can mix in to ONE of your subclasses that describes a behavior unique to the sublass.
+
+   <b>Solution:</b>
+
+4. Print to the screen your method lookup for the classes that you have created.
+
+   <b>Solution:</b>
+
+5. Move all of the methods from the `MyCar` class that also pertain to the `MyTruck` class into the `Vehicle` class. Make sure that all of your previous method calls are working when you are finished.
+
+   <b>Solution:</b>
+
+6. Write a method called `age` that calles a private method to calculate the age of the vehicle. Make sure the private method is not available from outside of the class. You'll need to use Ruby's built-on `Time` class to help.
+
+   <b>Solution:</b>
+
+7. Create a class `Student` with attributes `name` and `grade`. Do NOT make the grade getter public, so `joe.grade` will raise an error. Create a `better_grade_than?` Method, that you can call like so...
+
+   ```ruby
+   puts "Well done!" if joe.better_grade_than?(bob)
+   ```
+
+   <b>Solution:</b>
+
+8. Given the following code...
+
+   ```ruby
+   bob = Person.new
+   bob.hi
+   ```
+
+   And the corresponding error message...
+
+   ```ruby
+   NoMethodError: private method `hi' called for #<Person:0x007ff61dbb79f0>
+   from (irb):8
+   from /usr/local/rvm/rubies/ruby-2.0.0-rc2/bin/irb:16:in `<main>'
+   ```
+
+   What is the problem and how would you go about fixing it?
+
+   <b>Solution:</b>
+
+<br>
 
