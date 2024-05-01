@@ -1,5 +1,3 @@
-<h1><u>Object Oriented Programming with Ruby</u></h1>
-
 <h2>Chapter 1 - The Object Model</h2>
 
 <h3>Why Object Oriented Programming?</h3>
@@ -1631,25 +1629,219 @@ Finally, make sure to take time to go through the exercises, OOP is a tough conc
 
    <b>Solution:</b>
 
+   ```ruby
+   class Vehicle
+     def self.gas_mileage(gallons, miles)
+       puts "#{miles / gallons} miles per gallon of gas"
+     end
+   end
+   
+   class MyCar < Vehicle
+     NUMBER_OF_DOORS = 4
+   end
+   
+   class MyTruck < Vehicle
+     NUMBER_OF_DOORS = 2
+   end
+   ```
+
 2. Add a class variable to your superclass that can keep track of the number of objects created that inherit from the superclass. Create a method to print our the value of this class variable as well.
 
    <b>Solution:</b>
+
+   ```ruby
+   class Vehicle
+     @@number_of_vehicles = 0
+   
+     def self.number_of_vehicles
+       puts "This program has created #{@@number_of_vehicles} vehicles"
+     end
+   
+     def self.gas_mileage(gallons, miles)
+       puts "#{miles / gallons} miles per gallon of gas"
+     end
+   
+     def initialize
+       @@number_of_vehicles += 1
+     end
+   end
+   
+   class MyCar < Vehicle
+     NUMBER_OF_DOORS = 4
+     #code omitted for brevity...
+   end
+   
+   class MyTruck < Vehicle
+     NUMBER_OF_DOORS = 2
+   end
+   ```
 
 3. Create a module that you can mix in to ONE of your subclasses that describes a behavior unique to the sublass.
 
    <b>Solution:</b>
 
+   ```ruby
+   module Towable
+     def can_tow?(pounds)
+       pounds < 2000
+     end
+   end
+   
+   class Vehicle
+     @@number_of_vehicles = 0
+   
+     def self.number_of_vehicles
+       puts "This program has created #{@@number_of_vehicles} vehicles"
+     end
+   
+     def self.gas_mileage(gallons, miles)
+       puts "#{miles / gallons} miles per gallon of gas"
+     end
+   
+     def initialize
+       @@number_of_vehicles += 1
+     end
+   end
+   
+   class MyCar < Vehicle
+     NUMBER_OF_DOORS = 4
+     #code omitted for brevity...
+   end
+   
+   class MyTruck < Vehicle
+     include Towable
+   
+     NUMBER_OF_DOORS = 2
+   end
+   ```
+
 4. Print to the screen your method lookup for the classes that you have created.
 
    <b>Solution:</b>
+
+   ```ruby
+   # code omitted for brevity...
+   
+   puts MyCar.ancestors
+   puts MyTruck.ancestors
+   puts Vehicle.ancestors
+   ```
 
 5. Move all of the methods from the `MyCar` class that also pertain to the `MyTruck` class into the `Vehicle` class. Make sure that all of your previous method calls are working when you are finished.
 
    <b>Solution:</b>
 
+   ```ruby
+   module Towable
+     def can_tow?(pounds)
+       pounds < 2000
+     end
+   end
+   
+   class Vehicle
+     attr_accessor :color
+     attr_reader :model, :year
+     @@number_of_vehicles = 0
+   
+     def self.number_of_vehicles
+       puts "This program has created #{@@number_of_vehicles} vehicles"
+     end
+   
+     def self.gas_mileage(gallons, miles)
+       puts "#{miles / gallons} miles per gallon of gas"
+     end
+   
+     def initialize(year, model, color)
+       @year = year
+       @model = model
+       @color = color
+       @current_speed = 0
+       @@number_of_vehicles += 1
+     end
+   
+     def speed_up(number)
+       @current_speed += number
+       puts "You push the gas and accelerate #{number} mph."
+     end
+   
+     def brake(number)
+       @current_speed -= number
+       puts "You push the brake and decelerate #{number} mph."
+     end
+   
+     def current_speed
+       puts "You are now going #{@current_speed} mph."
+     end
+   
+     def shut_down
+       @current_speed = 0
+       puts "Let's park this bad boy!"
+     end
+   
+     def spray_paint(color)
+       self.color = color
+       puts "Your new #{color} paint job looks great!"
+     end
+   end
+   
+   class MyTruck < Vehicle
+     include Towable
+   
+     NUMBER_OF_DOORS = 2
+   
+     def to_s
+       "My truck  is a #{self.color}, #{self.year}, #{self.model}!"
+     end
+   end
+   
+   class MyCar < Vehicle
+     NUMBER_OF_DOORS = 4
+   
+     def to_s
+       "My car is a #{self.color}, #{self.year}, #{self.model}!"
+     end
+   end
+   
+   lumina = MyCar.new(1997, 'chevy lumina', 'white')
+   lumina.speed_up(20)
+   lumina.current_speed
+   lumina.speed_up(20)
+   lumina.current_speed
+   lumina.brake(20)
+   lumina.current_speed
+   lumina.brake(20)
+   lumina.current_speed
+   lumina.shut_down
+   MyCar.gas_mileage(13, 351)
+   lumina.spray_paint("red")
+   puts lumina
+   puts MyCar.ancestors
+   puts MyTruck.ancestors
+   puts Vehicle.ancestors
+   ```
+
 6. Write a method called `age` that calles a private method to calculate the age of the vehicle. Make sure the private method is not available from outside of the class. You'll need to use Ruby's built-on `Time` class to help.
 
    <b>Solution:</b>
+
+   ```ruby
+   class Vehicle
+     # code omitted for brevity...
+     def age
+       "Your #{self.model} is #{years_old} years old."
+     end
+   
+     private
+   
+     def years_old
+       Time.now.year - self.year
+     end
+   end
+   
+   # code omitted for brevity...
+   
+   puts lumina.age   #=> "Your chevy lumina is 27 years old"
+   ```
 
 7. Create a class `Student` with attributes `name` and `grade`. Do NOT make the grade getter public, so `joe.grade` will raise an error. Create a `better_grade_than?` Method, that you can call like so...
 
@@ -1658,6 +1850,29 @@ Finally, make sure to take time to go through the exercises, OOP is a tough conc
    ```
 
    <b>Solution:</b>
+
+   ```ruby
+   class Student
+     def initialize(name, grade)
+       @name = name
+       @grade = grade
+     end
+   
+     def better_grade_than?(other_student)
+       grade > other_student.grade
+     end
+   
+     protected
+   
+     def grade
+       @grade
+     end
+   end
+   
+   joe = Student.new("Joe", 90)
+   bob = Student.new("Bob", 84)
+   puts "Well done!" if joe.better_grade_than?(bob)
+   ```
 
 8. Given the following code...
 
@@ -1676,7 +1891,7 @@ Finally, make sure to take time to go through the exercises, OOP is a tough conc
 
    What is the problem and how would you go about fixing it?
 
-   <b>Solution:</b>
+   <b>Solution:</b> The problem is that the method `hi` is a private method, therefore it is unavailable to the object. I would fix this problem by moved the `hi` method above the `private` method call in the class.
 
 <br>
 
