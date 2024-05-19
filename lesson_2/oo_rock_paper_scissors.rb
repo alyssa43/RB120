@@ -102,18 +102,8 @@ class Computer < Player
   end
 end
 
-# Game Orchestration Engine
-class RPSGame
-  WINNING_SCORE = 10
+class GameFormat
   DISPLAY_SIZE = 80
-
-  attr_accessor :human, :computer, :ties, :winner, :grand_winner
-
-  def initialize
-    @human = Human.new
-    @computer = Computer.new
-    @ties = 0
-  end
 
   def center_text(text)
     puts text.center(DISPLAY_SIZE)
@@ -123,8 +113,34 @@ class RPSGame
     puts "=> #{text}"
   end
 
+  def display_border(text)
+    width = text.length + 4
+    horizontal = "-" * width
+    vertical = "|" + (' ' * (width - 2)) + "|"
+
+    center_text(horizontal)
+    center_text(vertical)
+    center_text("| #{text} |")
+    center_text(vertical)
+    center_text(horizontal)
+  end
+    
+  
   def display_empty_line
     puts ''
+  end
+end
+
+# Game Orchestration Engine
+class RPSGame < GameFormat
+  WINNING_SCORE = 10
+
+  attr_accessor :human, :computer, :ties, :winner, :grand_winner
+
+  def initialize
+    @human = Human.new
+    @computer = Computer.new
+    @ties = 0
   end
 
   def display_welcome_message
@@ -141,7 +157,7 @@ class RPSGame
 
   def display_score_board
     center_text("SCOREBOARD")
-    center_text("---> #{human.name}'s score: #{human.score} | #{computer.name}'s score: #{computer.score} | ties: #{@ties} <---")
+    display_border("---> #{human.name}'s score: #{human.score} | #{computer.name}'s score: #{computer.score} | ties: #{@ties} <---")
   end
     
   def display_moves
@@ -236,10 +252,7 @@ class RPSGame
       computer.choose
       determine_winner
       update_score
-      #display_moves
       display_winner
-      #display_score_board
-      #binding.pry
       break if grand_winner?
       break unless next_round?
     end
