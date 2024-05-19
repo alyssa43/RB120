@@ -1,3 +1,5 @@
+require 'pry'
+
 class Move
   VALUES = ['rock', 'paper', 'scissors']
 
@@ -35,10 +37,11 @@ class Move
 end
 
 class Player
-  attr_accessor :move, :name
+  attr_accessor :move, :name, :score
 
   def initialize
     set_name
+    @score = 0
   end
 end
 
@@ -46,8 +49,9 @@ class Human < Player
   def set_name
     n = ''
     loop do
-      puts "What's your name?"
-      n = gets.chomp
+      system 'clear'
+      puts "=> Please enter your name:"
+      n = gets.chomp.capitalize
       break unless n.empty?
       puts 'Sorry, must enter a name.'
     end
@@ -57,7 +61,7 @@ class Human < Player
   def choose
     choice = nil
     loop do
-      puts 'Please choose rock, paper, or scissors:'
+      puts '=> Please choose rock, paper, or scissors:'
       choice = gets.chomp.downcase
       break if Move::VALUES.include?(choice)
       puts "Sorry, invalid choice."
@@ -78,58 +82,173 @@ end
 
 # Game Orchestration Engine
 class RPSGame
-  attr_accessor :human, :computer
+  WINNING_SCORE = 10
+  DISPLAY_SIZE = 80
+
+  attr_accessor :human, :computer, :ties, :winner, :grand_winner
 
   def initialize
     @human = Human.new
     @computer = Computer.new
+    @ties = 0
+  end
+
+  def center_text(text)
+    puts text.center(DISPLAY_SIZE)
+  end
+
+  def prompt(text)
+    puts "=> #{text}"
+  end
+  
+  def display_empty_line
+    puts ''
   end
 
   def display_welcome_message
-    puts "Welcome to Rock, Paper, Scissors!"
+    system 'clear'
+    center_text("---> #{human.name}, welcome to Rock, Paper, Scissors! <---")
+    center_text("The first to reach 10 points is the winner!")
+    display_empty_line
   end
 
   def display_goodbye_message
-    puts "Thanks for playing Rock, Paper, Scissors. Good bye!"
+    center_text("---> Thanks for playing Rock, Paper, Scissors. Good bye, #{human.name}! <---")
+    display_empty_line
   end
 
+  def display_score_board
+    center_text("SCOREBOARD")
+    center_text("---> #{human.name}'s score: #{human.score} | #{computer.name}'s score: #{computer.score} | ties: #{@ties} <---")
+  end
+    
   def display_moves
     puts "#{human.name} chose #{human.move}"
     puts "#{computer.name} chose #{computer.move}"
   end
 
   def display_winner
-    if human.move > computer.move
-      puts "#{human.name} won!"
-    elsif human.move < computer.move
-      puts "#{computer.name} won!"
-    else
+    system 'clear'
+    display_score_board
+    display_empty_line
+    display_moves
+    display_empty_line
+
+    if winner.nil?
       puts "It's a tie!"
+    else
+      puts "#{winner} won!"
+    end
+
+    display_empty_line
+  end
+
+  def display_final_score
+    system 'clear'
+    center_text("GAME OVER! THE FINAL SCORE IS:")
+    display_empty_line
+    display_score_board
+    display_empty_line
+    center_text("Congratulations, #{grand_winner}, you are the winner!") if grand_winner
+  end
+
+  def determine_winner
+    if human.move > computer.move
+      @winner = human.name
+    elsif human.move < computer.move
+      @winner = computer.name
+    else
+      @winner = nil
     end
   end
 
-  def play_again?
-    answer = nil
+  def update_score
+    if winner == human.name
+      human.score += 1
+    elsif winner == computer.name
+      computer.score += 1
+    else
+      @ties += 1
+    end
+  end
+
+  def grand_winner?
+    if human.score == WINNING_SCORE
+      @grand_winner = human.name
+      return true
+    elsif computer.score == WINNING_SCORE
+      @grand_winner = computer.name
+      return true
+    end
+
+    false
+  end
+
+  def next_round?
+    puts "=> Push any button to continue to the next round, or 'q' to quit."
+    answer = gets.chomp.downcase
+
+    quit = quit_game? if answer.start_with?('q')
+
+    return false if quit
+    return true
+  end
+
+  def quit_game?
+    answer = ''
+
     loop do
-      puts "would you like to play again? (y/n)"
+      puts "=> Are you sure you want to quit? (yes/no)"
       answer = gets.chomp.downcase
-      break if ['y', 'n'].include?(answer)
-      puts "Sorry, must be y or n"
+      break if answer.start_with?('y') || answer.start_with?('n')
+      puts "Invalid input, please enter either 'yes' or 'no'"
     end
 
-    return false if answer == 'n'
-    return true if answer == 'y'
+    answer.start_with?('y')
   end
+
+  # def next_round?
+  #   puts "=> Push any button to continue to the next round, or 'q' to quit."
+  #   answer = gets.chomp.downcase
+  
+  #   quit = quit_game? if answer.start_with?('q')
+    
+  #   if quit
+  #     return false
+  #   else
+  #     return true
+  #   end
+  #   # return true unless quit 
+  # end
+  
+  # def quit_game?
+  #   answer = ''
+  
+  #   loop do
+  #     puts "=> Are you sure you want to quit? (yes/no)"
+  #     answer = gets.chomp.downcase
+  #     break if answer.start_with?('y') || answer.start_with?('n')
+  #     puts "Invalid input, please enter either 'yes' or 'no'"
+  #   end
+  
+  #   answer.start_with?('y')
+  # end
 
   def play
     display_welcome_message
     loop do
       human.choose
       computer.choose
-      display_moves
+      determine_winner
+      update_score
+      #display_moves
       display_winner
-      break unless play_again?
+      #display_score_board
+      #binding.pry
+      break if grand_winner?
+      break unless next_round?
     end
+    display_final_score
     display_goodbye_message
   end
 end
