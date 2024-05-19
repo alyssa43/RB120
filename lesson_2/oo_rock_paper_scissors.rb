@@ -1,7 +1,7 @@
 require 'pry'
 
 class Move
-  VALUES = ['rock', 'paper', 'scissors']
+  VALUES = ['rock', 'paper', 'scissors', 'lizard', 'spock']
 
   def initialize(value)
     @value = value
@@ -19,16 +19,38 @@ class Move
     @value == 'paper'
   end
 
+  def lizard?
+    @value == 'lizard'
+  end
+
+  def spock?
+    @value == 'spock'
+  end
+
   def >(other_move)
     (rock? && other_move.scissors?) ||
       (paper? && other_move.rock?) ||
-      (scissors? && other_move.paper?)
+      (scissors? && other_move.paper?) ||
+      (rock? && other_move.lizard?) ||
+      (lizard? && other_move.spock?) ||
+      (spock? && other_move.scissors?) ||
+      (scissors? && other_move.lizard?) ||
+      (lizard? && other_move.paper?) ||
+      (paper? && other_move.spock?) ||
+      (spock? && other_move.rock?)
   end
 
   def <(other_move)
     (rock? && other_move.paper?) ||
       (paper? && other_move.scissors?) ||
-      (scissors? && other_move.rock?)
+      (scissors? && other_move.rock?) ||
+      (lizard? && other_move.rock?) ||
+      (spock? && other_move.lizard?) ||
+      (scissors? && other_move.spock?) ||
+      (lizard? && other_move.scissors?) ||
+      (paper? && other_move.lizard?) ||
+      (spock? && other_move.paper?) ||
+      (rock? && other_move.spock?)
   end
 
   def to_s
@@ -61,7 +83,7 @@ class Human < Player
   def choose
     choice = nil
     loop do
-      puts '=> Please choose rock, paper, or scissors:'
+      puts '=> Please choose rock, paper, scissors, lizard, or spock:'
       choice = gets.chomp.downcase
       break if Move::VALUES.include?(choice)
       puts "Sorry, invalid choice."
@@ -100,20 +122,20 @@ class RPSGame
   def prompt(text)
     puts "=> #{text}"
   end
-  
+
   def display_empty_line
     puts ''
   end
 
   def display_welcome_message
     system 'clear'
-    center_text("---> #{human.name}, welcome to Rock, Paper, Scissors! <---")
+    center_text("---> #{human.name}, welcome to Rock, Paper, Scissors, Lizard, Spock! <---")
     center_text("The first to reach 10 points is the winner!")
     display_empty_line
   end
 
   def display_goodbye_message
-    center_text("---> Thanks for playing Rock, Paper, Scissors. Good bye, #{human.name}! <---")
+    center_text("---> Thanks for playing Rock, Paper, Scissors, Lizard, Spock. Good bye! <---")
     display_empty_line
   end
 
@@ -206,33 +228,6 @@ class RPSGame
 
     answer.start_with?('y')
   end
-
-  # def next_round?
-  #   puts "=> Push any button to continue to the next round, or 'q' to quit."
-  #   answer = gets.chomp.downcase
-  
-  #   quit = quit_game? if answer.start_with?('q')
-    
-  #   if quit
-  #     return false
-  #   else
-  #     return true
-  #   end
-  #   # return true unless quit 
-  # end
-  
-  # def quit_game?
-  #   answer = ''
-  
-  #   loop do
-  #     puts "=> Are you sure you want to quit? (yes/no)"
-  #     answer = gets.chomp.downcase
-  #     break if answer.start_with?('y') || answer.start_with?('n')
-  #     puts "Invalid input, please enter either 'yes' or 'no'"
-  #   end
-  
-  #   answer.start_with?('y')
-  # end
 
   def play
     display_welcome_message
