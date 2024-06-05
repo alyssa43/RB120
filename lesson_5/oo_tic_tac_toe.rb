@@ -89,6 +89,15 @@ end
 
 Player = Struct.new('Player', :marker)
 
+class Player
+  attr_accessor :marker, :name
+
+  def initialize(marker, name)
+    @marker = marker
+    @name = name
+  end
+end
+
 class TTTGame
   HUMAN_MARKER = "X"
   COMPUTER_MARKER = "O"
@@ -98,8 +107,8 @@ class TTTGame
 
   def initialize
     @board = Board.new
-    @human = Player.new(HUMAN_MARKER)
-    @computer = Player.new(COMPUTER_MARKER)
+    @human = Player.new(HUMAN_MARKER, get_human_name)
+    @computer = Player.new(COMPUTER_MARKER, get_computer_name)
     @current_marker = FIRST_TO_MOVE
   end
 
@@ -111,6 +120,22 @@ class TTTGame
   end
 
   private
+  
+  def get_human_name
+    clear
+    name = ''
+    loop do
+      puts "Please enter your name:"
+      name = gets.chomp.capitalize
+      break unless name.empty?
+      puts "Oops, you must enter a name. Try again."
+    end
+    name
+  end
+
+  def get_computer_name
+    ['R2D2', 'Walle', 'Earl'].sample
+  end
 
   def main_game
     loop do
@@ -132,12 +157,12 @@ class TTTGame
   end
 
   def display_welcome_message
-    puts "Welcome to Tic Tac Toe!"
+    puts "#{human.name}, welcome to Tic Tac Toe!"
     puts ""
   end
 
   def display_goodbye_message
-    puts "Thanks for playing Tic Tac Toe! Goodbye!"
+    puts "Thanks for playing Tic Tac Toe! Goodbye #{human.name}!"
   end
 
   def clear_screen_and_display_board
@@ -150,7 +175,7 @@ class TTTGame
   end
 
   def display_board
-    puts "You're an #{human.marker}. Computer is an #{computer.marker}."
+    puts "#{human.name} is an #{human.marker}. #{computer.name} is an #{computer.marker}."
     puts ""
     board.draw
     puts ""
@@ -187,9 +212,9 @@ class TTTGame
 
     case board.winning_marker
     when human.marker
-      puts "You won!"
+      puts "#{human.name} won!"
     when computer.marker
-      puts "Computer won!"
+      puts "#{computer.name} won!"
     else
       puts "It's a tie!"
     end
