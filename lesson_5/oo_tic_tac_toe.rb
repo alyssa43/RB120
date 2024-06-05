@@ -35,9 +35,11 @@ class Board
   end
 
   def reset
-    (1..9).each { |key| @squares[key] = Square.new}
+    (1..9).each { |key| @squares[key] = Square.new }
   end
 
+  # rubocop:disable Metrics/AbcSize
+  # rubocop:disable Metrics/MethodLength
   def draw
     puts "     |     |"
     puts "  #{@squares[1]}  |  #{@squares[2]}  |  #{@squares[3]}"
@@ -51,6 +53,8 @@ class Board
     puts "  #{@squares[7]}  |  #{@squares[8]}  |  #{@squares[9]}"
     puts "     |     |"
   end
+  # rubocop:enable Metrics/AbcSize
+  # rubocop:enable Metrics/MethodLength
 
   private
 
@@ -59,7 +63,6 @@ class Board
     return false if markers.size != 3
     markers.min == markers.max
   end
-
 end
 
 class Square
@@ -84,18 +87,9 @@ class Square
   end
 end
 
-# class Player
-#   attr_reader :marker
-
-#   def initialize(marker)
-#     @marker = marker
-#   end
-# end
-
 Player = Struct.new('Player', :marker)
 
-
-class TTTGame # Game Orchestration Engine
+class TTTGame
   HUMAN_MARKER = "X"
   COMPUTER_MARKER = "O"
   FIRST_TO_MOVE = HUMAN_MARKER
@@ -112,26 +106,30 @@ class TTTGame # Game Orchestration Engine
   def play
     clear
     display_welcome_message
+    main_game
+    display_goodbye_message
+  end
 
+  private
+
+  def main_game
     loop do
       display_board
-
-      loop do 
-        current_player_moves
-        break if board.someone_won? || board.full?
-        clear_screen_and_display_board
-      end
-
+      player_move
       display_result
       break unless play_again?
       reset
       display_play_again_message
     end
-
-    display_goodbye_message
   end
 
-  private
+  def player_move
+    loop do
+      current_player_moves
+      break if board.someone_won? || board.full?
+      clear_screen_and_display_board if human_turn?
+    end
+  end
 
   def display_welcome_message
     puts "Welcome to Tic Tac Toe!"
@@ -159,7 +157,7 @@ class TTTGame # Game Orchestration Engine
   end
 
   def human_moves
-    puts "Choose a square (#{board.unmarked_keys.join (", ")}): "
+    puts "Choose a square (#{board.unmarked_keys.join(', ')}): "
     square = nil
     loop do
       square = gets.chomp.to_i
