@@ -1,32 +1,23 @@
 class FixedArray
-  attr_reader :array
-
   def initialize(array_length)
     @array = [nil] * array_length
   end
 
   def [](index)
-    if valid_index?(index)
-      @array[index]
-    else
-      IndexError
-    end
+    @array.fetch(index)
   end
 
   def []=(index, new_value)
+    self[index]
     @array[index] = new_value
   end
 
   def to_a
-    @array
+    @array.clone
   end
 
   def to_s
-    @array.to_s
-  end
-
-  def valid_index?(index)
-    index < @array.length 
+    to_a.to_s
   end
 end
 
@@ -54,8 +45,6 @@ puts fixed_array.to_s == '[nil, "c", nil, "a", "d"]'
 puts fixed_array[-1] == 'd'
 puts fixed_array[-4] == 'c'
 
-puts fixed_array[6]
-
 begin
   fixed_array[6]
   puts false
@@ -63,16 +52,16 @@ rescue IndexError
   puts true
 end
 
-# begin
-#   fixed_array[-7] = 3
-#   puts false
-# rescue IndexError
-#   puts true
-# end
+begin
+  fixed_array[-7] = 3
+  puts false
+rescue IndexError
+  puts true
+end
 
-# begin
-#   fixed_array[7] = 3
-#   puts false
-# rescue IndexError
-#   puts true
-# end
+begin
+  fixed_array[7] = 3
+  puts false
+rescue IndexError
+  puts true
+end
