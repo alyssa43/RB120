@@ -1,7 +1,8 @@
-class AuthenticationError < Exception; end
+class AuthenticationError < StandardError; end
 
 # A mock search engine
 # that returns a random number instead of an actual count.
+
 class SearchEngine
   def self.count(query, api_key)
     unless valid?(api_key)
@@ -19,7 +20,7 @@ class SearchEngine
 end
 
 module DoesItRock
-  API_KEY = 'LS1'
+  API_KEY = 'LS1A'
 
   class NoScore; end
 
@@ -29,8 +30,8 @@ module DoesItRock
       negative = SearchEngine.count(%{"#{term} is not fun"}, API_KEY)
 
       (positive * 100) / (positive + negative)
-    rescue Exception
-      NoScore
+    rescue ZeroDivisionError
+      NoScore.new
     end
   end
 
@@ -47,7 +48,7 @@ module DoesItRock
     else
       "#{term} rocks!"
     end
-  rescue Exception => e
+  rescue StandardError => e
     e.message
   end
 end

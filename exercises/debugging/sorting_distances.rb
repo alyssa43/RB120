@@ -34,6 +34,14 @@ class Length
     end
   end
 
+  def <=>(other)
+    case unit
+    when :km  then value <=> other.as_kilometers.value
+    when :mi  then value <=> other.as_miles.value
+    when :nmi then value <=> other.as_nautical_miles.value
+    end
+  end
+
   def <=(other)
     self < other || self == other
   end
@@ -58,15 +66,8 @@ class Length
 end
 
 # Example
-length_1 = Length.new(1, :mi)
-length_2 = Length.new(1, :nmi)
-length_3 = Length.new(1, :km)
 
-puts length_1
-puts length_2
-puts length_3
-
-#puts [Length.new(1, :mi), Length.new(1, :nmi), Length.new(1, :km)].sort
+puts [Length.new(1, :mi), Length.new(1, :nmi), Length.new(1, :km)].sort
 # => comparison of Length with Length failed (ArgumentError)
 # expected output:
 # 1 km
