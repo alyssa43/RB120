@@ -31,37 +31,38 @@ class Card
   end
 end
 
-class Deck < Card
+class Deck
   RANKS = ((2..10).to_a + %w(Jack Queen King Ace)).freeze
   SUITS = %w(Hearts Clubs Diamonds Spades).freeze
 
   def initialize
+    create_new_deck
+  end
+
+  def draw
+    create_new_deck if @deck.empty?
+    @deck.pop
+  end
+
+  private
+
+  def create_new_deck
     @deck = []
     RANKS.each do |rank|
       SUITS.each do |suit|
-        @deck << [rank, suit]
+        @deck << Card.new(rank, suit)
       end
     end
     @deck.shuffle!
-  end
-
-  def create_new_deck
-    RANKS.each do |rank|
-      SUITS.each do |suit|
-        
-
-  def draw
-    Deck.new if @deck.empty?
-    @deck.pop
   end
 end
 
 deck = Deck.new
 drawn = []
 52.times { drawn << deck.draw }
-drawn.count { |card| card.rank == 5 } == 4
-# drawn.count { |card| card.suit == 'Hearts' } == 13
+puts drawn.count { |card| card.rank == 5 } == 4
+puts drawn.count { |card| card.suit == 'Hearts' } == 13
 
-# drawn2 = []
-# 52.times { drawn2 << deck.draw }
-# drawn != drawn2 # Almost always.
+drawn2 = []
+52.times { drawn2 << deck.draw }
+puts drawn != drawn2 # Almost always.
