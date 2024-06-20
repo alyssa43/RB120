@@ -46,6 +46,8 @@ class Minilang < MyCustomError
     end
   end
 
+  private
+
   def print_register
     puts @register
   end
