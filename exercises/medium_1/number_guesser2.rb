@@ -35,7 +35,7 @@ class GuessingGame
     loop do
       @users_guess = gets.to_i
       break if valid_guess?
-      puts "Invalid guess. Enter a number between 1 and 100:"
+      puts "Invalid guess. Enter a number between #{@min_num} and #{@max_num}:"
     end
     puts ""
     @guesses_remaining -= 1
